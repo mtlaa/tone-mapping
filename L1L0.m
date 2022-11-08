@@ -11,19 +11,19 @@ otfFx = psf2otf(fx,[hei,wid]);
 otfFy = psf2otf(fy,[hei,wid]);
 DxDy = abs(otfFy).^2 + abs(otfFx).^2;
 
-B = S;
-C = zeros(hei,wid*2);
-E = zeros(hei,wid*2);
-L1 = zeros(hei,wid*2);
-L2 = zeros(hei,wid*2);
-ro1 = 1;
-ro2 = 1;
+B = S;   % 对应于文中的b
+C = zeros(hei,wid*2);   % 文中的c1
+E = zeros(hei,wid*2);   % 文中的c2
+L1 = zeros(hei,wid*2);   % 文中的y1
+L2 = zeros(hei,wid*2);   % 文中的y2
+ro1 = 1;   
+ro2 = 1;   % ro1==ro2 ，对应文中的ρ
 DiffS = [-imfilter(S,fx,'circular'),-imfilter(S,fy,'circular')];
 for i = 1:iter
     
     CL = C + L1./ro1;
     EL = DiffS - E - L2./ro2;
-    %% for B
+    %% for B   （1）
     C1L1 = CL(:,1:wid);
     C2L2 = CL(:,1+wid:end);
     E1L3 = EL(:,1:wid);
@@ -35,22 +35,22 @@ for i = 1:iter
     B_new = real(ifft2(Nomi./Denomi));
     DiffB = [-imfilter(B_new,fx,'circular'),-imfilter(B_new,fy,'circular')];
     
-    %% for C1, C2, shrinkage
+    %% for C11，C12  （2）
     BL = DiffB - L1./ro1;
     C_new = sign(BL) .* max(abs(BL) - lambda1./ro1 ,0);
     
-    %% for E1, E2
+    %% for C21，C22  （3）
     BL = DiffS - DiffB - L2./ro2;
     E_new = BL;
     temp = BL.^2;
     t = temp < 2.*lambda2./ro2;
     E_new(t) = 0;
     
-    %% for Li,i=1,2,3,4
+    %% for Li,i=1,2,3,4 （4） yi  
     L1_new = L1 + ro1 * (C_new - DiffB);
     L2_new = L2 + ro2 * (E_new - DiffS + DiffB);
     
-    %% for ro
+    %% for ro  （5）update
     ro1 = ro1 *4;
     ro2 = ro2 *4;
     
