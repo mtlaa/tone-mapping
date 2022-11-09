@@ -10,11 +10,11 @@ fy = [1; -1];
 otfFx = psf2otf(fx,[hei,wid]);
 otfFy = psf2otf(fy,[hei,wid]);
 DxDy = abs(otfFy).^2 + abs(otfFx).^2;
-B = S;
-C = zeros(hei,wid);
-D = zeros(hei,wid);
-T1 = zeros(hei,wid);
-T2 = zeros(hei,wid);
+B = S; % b
+C = zeros(hei,wid); % c11
+D = zeros(hei,wid); % c12
+T1 = zeros(hei,wid); % y11
+T2 = zeros(hei,wid); % y12
 ro = 1;
 for i = 1:iter
     
@@ -23,8 +23,8 @@ for i = 1:iter
     Denomi = 1 + ro * DxDy;
     B_new = real(ifft2(Nomi./Denomi));
     
-    GradxB = -imfilter(B_new,fx,'circular');
-    GradyB = -imfilter(B_new,fy,'circular'); 
+    GradxB = -imfilter(B_new,fx,'circular'); % ▽x B
+    GradyB = -imfilter(B_new,fy,'circular'); % ▽y B
     %% for C, D
     BB1 = GradxB - T1./ro;
     BB2 = GradyB - T2./ro;

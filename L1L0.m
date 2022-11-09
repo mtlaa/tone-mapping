@@ -25,38 +25,44 @@ for i = 1:iter
     CL = C + L1./ro1;
     EL = DiffS - E - L2./ro2;
     %% for B   （1）
+    % 拆分
     C1L1 = CL(:,1:wid);
     C2L2 = CL(:,1+wid:end);
     E1L3 = EL(:,1:wid);
     E2L4 = EL(:,1+wid:end);
     
+    % 分子
     Nomi = fft2(S) + ro1.*conj(otfFx).*fft2(C1L1) + ro1.*conj(otfFy).*fft2(C2L2) ...
         + ro2.*conj(otfFx).*fft2(E1L3) + ro2.*conj(otfFy).*fft2(E2L4);
+    % 分母
     Denomi = 1 + (ro1 + ro2) .* DxDy;
-    B_new = real(ifft2(Nomi./Denomi));
+    B_new = real(ifft2(Nomi./Denomi));  % b^k+1
     DiffB = [-imfilter(B_new,fx,'circular'),-imfilter(B_new,fy,'circular')];   % ▽b
     
     %% for C11，C12  （2）
-    BL = DiffB - L1./ro1;
-    C_new = sign(BL) .* max(abs(BL) - lambda1./ro1 ,0);
+    BL = DiffB - L1./ro1;   % x
+    C_new = sign(BL) .* max(abs(BL) - lambda1./ro1 ,0);   % α=λ1/ρ=lambda1./ro1
     
     %% for C21，C22  （3）分段函数求解
-    BL = DiffS - DiffB - L2./ro2;
-    E_new = BL;
+    BL = DiffS - DiffB - L2./ro2;   % q^k
+    E_new = BL;   % otherwise
     % 根据条件把某些像素置0
     temp = BL.^2;
     t = temp < 2.*lambda2./ro2;
-    E_new(t) = 0;
+    E_new(t) = 0;   % q^2<=2.*lambda2./ro2
     
     %% for Li,i=1,2,3,4 （4） yi  
+    % 对偶上升
     L1_new = L1 + ro1 * (C_new - DiffB);
     L2_new = L2 + ro2 * (E_new - DiffS + DiffB);
     
     %% for ro  （5）update
+    % 论文中说以 2倍 更新，这里为什么是4
     ro1 = ro1 *4;
     ro2 = ro2 *4;
     
     %% update
+    % 准备下一轮迭代
     B = B_new;
     C = C_new;
     E = E_new;
